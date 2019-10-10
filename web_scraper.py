@@ -8,40 +8,53 @@ from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from bs4 import BeautifulSoup
 import pandas as pd 
+import argparse
 
-driver = webdriver.Chrome(executable_path="C:/Executables/chromedriver.exe")
+parser = argparse.ArgumentParser(description='Web Scraper Argument Parser')
 
-# driver = webdriver.Chrome()
+parser.add_argument('--chromedriver', default='C:/Executables/chromedriver/chromedriver.exe', type=str, help='location of chromedriver executable')
+parser.add_argument('--culture', default='english', type=str, help='label for the cultural group you want to scrape')
+parser.add_argument('--url', default='https://en.wikipedia.org/wiki/List_of_towns_in_England', type=str, help='URL for page you wish to scrape')
+parser.add_argument('--overwrite', default=False, type=bool, help='true overwrites all data in city_info.json')
 
-driver.get("https://en.wikipedia.org/wiki/List_of_towns_in_England")
+args = parser.parse_args()
+
+# print(args)
+
+chromedriver_executable_path = args.chromedriver 
+culture_label = args.culture
+wiki_url = args.url 
+overwrite = args.overwrite 
+json_path = 'city_data.json'
+
+try:
+    with open(json_path, 'r') as f:
+        city_data = json.load(f)
+except:
+    city_data = {}
+
+driver = webdriver.Chrome(executable_path=chromedriver_executable_path)
+
+driver.get(wiki_url)
 
 content = driver.page_source
 soup = BeautifulSoup(content)
 
 tables = soup.findAll('table', attrs={'class': 'wikitable sortable jquery-tablesorter'})
 
-cities = {}
-cities['England'] = []
+if overwrite or culture_label not in city_data:
+    city_data[culture_label] = []
 
 title_regex = re.compile('.+')
 
 for table in tables:
     for td_href in table.find_all('a', href=True, attrs={'title': title_regex}):
-        cities['England'].append(td_href.text)
+        city_name = td_href.text
 
-# print(cities)
+        if city_name not in city_data[culture_label]:
+            city_data[culture_label].append(city_name)
 
-with open('city_data.json', 'w') as outfile:
-    json.dump(cities, outfile, indent=4)
+driver.quit()
 
-# options = ChromeOptions()
-# options.binary_location = "C:/Program Files (x86)/BraveSoftware/Brave-Browser/Application/brave.exe"
-
-# print("getcwd()", os.getcwd())
-
-# driver_path = os.path.join(os.getcwd(), "chromedriver")
-# driver = webdriver.Chrome(chrome_options=options, executable_path=driver_path)
-
-# driver.get("https://en.wikipedia.org/wiki/List_of_towns_in_England")
-# content = driver.page_source
-# soup = BeautifulSoup(content)
+with open(json_path, 'w') as outfile:
+    json.dump(city_data, outfile, indent=4)
