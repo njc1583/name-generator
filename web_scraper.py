@@ -12,18 +12,40 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Web Scraper Argument Parser')
 
-parser.add_argument('--chromedriver', default='C:/Executables/chromedriver/chromedriver.exe', type=str, help='location of chromedriver executable')
-parser.add_argument('--culture', default='english', type=str, help='label for the cultural group you want to scrape')
-parser.add_argument('--url', default='https://en.wikipedia.org/wiki/List_of_towns_in_England', type=str, help='URL for page you wish to scrape')
-parser.add_argument('--overwrite', default=False, type=bool, help='true overwrites all data in city_info.json')
+parser.add_argument(
+    '--chromedriver', 
+    type=str,
+    default='C:/Executables/chromedriver/chromedriver.exe', 
+    help='location of chromedriver executable'
+)
+parser.add_argument(
+    '--culture',
+    nargs='+',
+    type=str,
+    default=['english'], 
+    help='label for the cultural group you want to scrape'
+)
+parser.add_argument(
+    '--url', 
+    nargs='+',
+    type=str,
+    default=['https://en.wikipedia.org/wiki/List_of_towns_in_England'], 
+    help='URL for page you wish to scrape'
+)
+parser.add_argument(
+    '--overwrite',
+    type=bool,  
+    default=False,
+    help='true overwrites all data in city_info.json'
+)
 
 args = parser.parse_args()
 
 # print(args)
 
 chromedriver_executable_path = args.chromedriver 
-culture_label = args.culture
-wiki_url = args.url 
+culture_labels = args.culture
+wiki_urls = args.url 
 overwrite = args.overwrite 
 json_path = 'city_data.json'
 
@@ -35,24 +57,35 @@ except:
 
 driver = webdriver.Chrome(executable_path=chromedriver_executable_path)
 
-driver.get(wiki_url)
+for i in range(min(len(culture_labels), len(wiki_urls))):
+    wiki_url = wiki_urls[i]
+    culture_label = culture_labels[i]
 
-content = driver.page_source
-soup = BeautifulSoup(content)
+    driver.get(wiki_url)
 
-tables = soup.findAll('table', attrs={'class': 'wikitable sortable jquery-tablesorter'})
+    content = driver.page_source
+    soup = BeautifulSoup(content, 'html.parser')
 
-if overwrite or culture_label not in city_data:
-    city_data[culture_label] = []
+    tables = soup.findAll('table', attrs={'class': 'wikitable sortable jquery-tablesorter'})
 
-title_regex = re.compile('.+')
+    if overwrite or culture_label not in city_data:
+        city_data[culture_label] = {'cities': [], 'sources': []}
 
-for table in tables:
-    for td_href in table.find_all('a', href=True, attrs={'title': title_regex}):
-        city_name = td_href.text
+    if wiki_url not in city_data[culture_label]['sources']:
+        city_data[culture_label]['sources'].append(wiki_url)
 
-        if city_name not in city_data[culture_label]:
-            city_data[culture_label].append(city_name)
+    title_regex = re.compile('.+')
+
+    for table in tables:
+        for td_href in table.find_all('a', href=True, attrs={'title': title_regex}):
+            city_name = td_href.text
+
+            if city_name not in city_data[culture_label]['cities']:
+                city_data[culture_label]['cities'].append(city_name)
+
+    if len(city_data[culture_label]) == 0:
+            print("ERROR: Could not properly parse city names")
+            del(city_data[culture_label])
 
 driver.quit()
 
