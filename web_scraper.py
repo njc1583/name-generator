@@ -55,6 +55,9 @@ try:
 except:
     city_data = {}
 
+if overwrite:
+    city_data = {}
+
 driver = webdriver.Chrome(executable_path=chromedriver_executable_path)
 
 for i in range(min(len(culture_labels), len(wiki_urls))):
@@ -68,7 +71,7 @@ for i in range(min(len(culture_labels), len(wiki_urls))):
 
     tables = soup.findAll('table', attrs={'class': 'wikitable sortable jquery-tablesorter'})
 
-    if overwrite or culture_label not in city_data:
+    if culture_label not in city_data:
         city_data[culture_label] = {'cities': [], 'sources': []}
 
     if wiki_url not in city_data[culture_label]['sources']:
@@ -83,11 +86,18 @@ for i in range(min(len(culture_labels), len(wiki_urls))):
             if city_name not in city_data[culture_label]['cities']:
                 city_data[culture_label]['cities'].append(city_name)
 
-    if len(city_data[culture_label]) == 0:
-            print("ERROR: Could not properly parse city names")
-            del(city_data[culture_label])
 
 driver.quit()
+
+culture_labels_to_delete = []
+
+for culture_label in city_data:
+    if len(city_data[culture_label]['cities']) == 0:
+        print("ERROR: Could not properly parse city names for {} names".format(culture_label))
+        culture_labels_to_delete.append(culture_label)
+
+for culture in culture_labels_to_delete:
+    del city_data[culture]
 
 with open(json_path, 'w', encoding='utf-8') as outfile:
     json.dump(city_data, outfile, indent=4, ensure_ascii=False)
