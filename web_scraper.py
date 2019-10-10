@@ -56,5 +56,5 @@ for table in tables:
 
 driver.quit()
 
-with open(json_path, 'w') as outfile:
-    json.dump(city_data, outfile, indent=4)
+with open(json_path, 'w', encoding='utf-8') as outfile:
+    json.dump(city_data, outfile, indent=4, ensure_ascii=False)
