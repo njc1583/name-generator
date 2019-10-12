@@ -7,7 +7,6 @@ import json
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from bs4 import BeautifulSoup
-import pandas as pd 
 import argparse
 
 parser = argparse.ArgumentParser(description='Web Scraper Argument Parser')
@@ -43,6 +42,10 @@ args = parser.parse_args()
 
 # print(args)
 
+href_regex = re.compile('/wiki/(\w){3,12}', re.UNICODE)
+title_regex = re.compile('\w{3,12}', re.UNICODE)
+city_name_regex = re.compile('\w{3,12}', re.UNICODE)
+
 chromedriver_executable_path = args.chromedriver 
 culture_labels = args.culture
 wiki_urls = args.url 
@@ -70,14 +73,12 @@ for i in range(min(len(culture_labels), len(wiki_urls))):
     soup = BeautifulSoup(content, 'html.parser')
 
     tables = soup.findAll('table', attrs={'class': 'wikitable sortable jquery-tablesorter'})
-
+    
     if culture_label not in city_data:
         city_data[culture_label] = {'cities': [], 'sources': []}
 
     if wiki_url not in city_data[culture_label]['sources']:
         city_data[culture_label]['sources'].append(wiki_url)
-
-    title_regex = re.compile('.+')
 
     for table in tables:
         for td_href in table.find_all('a', href=True, attrs={'title': title_regex}):
@@ -85,7 +86,6 @@ for i in range(min(len(culture_labels), len(wiki_urls))):
 
             if city_name not in city_data[culture_label]['cities']:
                 city_data[culture_label]['cities'].append(city_name)
-
 
 driver.quit()
 
@@ -95,6 +95,8 @@ for culture_label in city_data:
     if len(city_data[culture_label]['cities']) == 0:
         print("ERROR: Could not properly parse city names for {} names".format(culture_label))
         culture_labels_to_delete.append(culture_label)
+    else:
+        city_data[culture_label]['cities'] = sorted(city_data[culture_label]['cities'])
 
 for culture in culture_labels_to_delete:
     del city_data[culture]
