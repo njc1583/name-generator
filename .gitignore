@@ -1,4 +1,5 @@
 # Other related files
+.vscode/
 *.json
 
 # Byte-compiled / optimized / DLL files
