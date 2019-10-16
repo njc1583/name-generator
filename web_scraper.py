@@ -42,9 +42,9 @@ args = parser.parse_args()
 
 # print(args)
 
-href_regex = re.compile('/wiki/(\w){3,12}', re.UNICODE)
+# href_regex = re.compile('/wiki/(\w){3,12}', re.UNICODE)
 title_regex = re.compile('\w{3,12}', re.UNICODE)
-city_name_regex = re.compile('\w{3,12}', re.UNICODE)
+# city_name_regex = re.compile('\w{3,12}', re.UNICODE)
 
 chromedriver_executable_path = args.chromedriver 
 culture_labels = args.culture
@@ -82,6 +82,7 @@ for i in range(min(len(culture_labels), len(wiki_urls))):
 
     for table in tables:
         for td_href in table.find_all('a', href=True, attrs={'title': title_regex}):
+        # for td_href in table.find_all('a', href=True):
             city_name = td_href.text
 
             if city_name not in city_data[culture_label]['cities']:

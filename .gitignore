@@ -1,3 +1,9 @@
+# Other unrelated files
+*.DOT 
+*.pdf
+*.svg
+*.png
+
 # Other related files
 .vscode/
 *.json
