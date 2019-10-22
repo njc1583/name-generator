@@ -29,7 +29,6 @@ parser.add_argument(
     help='number of names you wish to generate'
 )
 
-
 args = parser.parse_args()
 
 culture = args.culture.lower()
@@ -60,9 +59,9 @@ if 'cities' not in all_data[culture]:
 city_data = all_data[culture]
 city_list = city_data['cities']
 
-print(city_list)
+# print(city_list)
 
 gen = generator.Generator(culture, city_data)
 
 gen.generate_grammar()
-gen.generate_graph()
+# gen.generate_graph()
